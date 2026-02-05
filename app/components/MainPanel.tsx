@@ -123,6 +123,75 @@ const extraJourneyItems = Array.from({ length: 9 }, (_, index) => ({
 
 const journeyItems = [...baseJourneyItems, ...extraJourneyItems];
 
+const TIME_ZONE = "America/New_York";
+
+type TimeParts = {
+  year: number;
+  month: number;
+  day: number;
+  hour: number;
+  minute: number;
+  second: number;
+};
+
+function getTimeZoneParts(date: Date, timeZone: string): TimeParts {
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    hour12: false,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+  const parts = formatter.formatToParts(date);
+  const lookup: Record<string, string> = {};
+  parts.forEach((part) => {
+    lookup[part.type] = part.value;
+  });
+  return {
+    year: Number(lookup.year),
+    month: Number(lookup.month),
+    day: Number(lookup.day),
+    hour: Number(lookup.hour),
+    minute: Number(lookup.minute),
+    second: Number(lookup.second),
+  };
+}
+
+function getTimeZoneOffset(date: Date, timeZone: string) {
+  const parts = getTimeZoneParts(date, timeZone);
+  const asUTC = Date.UTC(
+    parts.year,
+    parts.month - 1,
+    parts.day,
+    parts.hour,
+    parts.minute,
+    parts.second
+  );
+  return asUTC - date.getTime();
+}
+
+function zonedTimeToUtc(
+  year: number,
+  month: number,
+  day: number,
+  hour: number,
+  minute: number,
+  second: number,
+  timeZone: string
+) {
+  const utcGuess = Date.UTC(year, month - 1, day, hour, minute, second);
+  let offset = getTimeZoneOffset(new Date(utcGuess), timeZone);
+  let utcTime = utcGuess - offset;
+  const offsetCheck = getTimeZoneOffset(new Date(utcTime), timeZone);
+  if (offsetCheck !== offset) {
+    utcTime = utcGuess - offsetCheck;
+  }
+  return utcTime;
+}
+
 function MiniChart({
   revenue,
   spend,
@@ -344,12 +413,31 @@ export default function MainPanel() {
   useEffect(() => {
     const updateCountdown = () => {
       const now = new Date();
-      const nextDrop = new Date(now);
-      nextDrop.setHours(8, 0, 0, 0);
-      if (now >= nextDrop) {
-        nextDrop.setDate(nextDrop.getDate() + 1);
+      const nowParts = getTimeZoneParts(now, TIME_ZONE);
+      let targetYear = nowParts.year;
+      let targetMonth = nowParts.month;
+      let targetDay = nowParts.day;
+
+      if (nowParts.hour >= 8) {
+        const nextDay = new Date(
+          Date.UTC(nowParts.year, nowParts.month - 1, nowParts.day)
+        );
+        nextDay.setUTCDate(nextDay.getUTCDate() + 1);
+        targetYear = nextDay.getUTCFullYear();
+        targetMonth = nextDay.getUTCMonth() + 1;
+        targetDay = nextDay.getUTCDate();
       }
-      const diffMs = Math.max(nextDrop.getTime() - now.getTime(), 0);
+
+      const targetUtc = zonedTimeToUtc(
+        targetYear,
+        targetMonth,
+        targetDay,
+        8,
+        0,
+        0,
+        TIME_ZONE
+      );
+      const diffMs = Math.max(targetUtc - now.getTime(), 0);
       const totalSeconds = Math.floor(diffMs / 1000);
       const hours = Math.floor(totalSeconds / 3600);
       const minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -632,20 +720,32 @@ export default function MainPanel() {
                   Your browser does not support the video tag.
                 </video>
               </div>
-              <div className="space-y-3 mt-6">
+              <div className="flex h-full flex-col pt-6">
                 <div className="justify-content">
                   <div className="inline-flex items-center gap-2 rounded-sm bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-500">
                     INTRO
                   </div>
                   <span className="ml-2 text-xs text-slate-500">2-3 min</span>
                 </div>
-                <h4 className="text-lg font-semibold text-slate-900">
+                <h4 className="mt-3 text-lg font-semibold text-slate-900">
                   The Clever Hiring System
                 </h4>
                 <p className="text-sm text-slate-500">
                   Learn how top sales teams spot high-intent candidates and
                   build repeatable outbound pipelines.
                 </p>
+                <div className="mt-auto border-t border-slate-100 pb-4 pr-4">
+                  <p className="text-xs font-semibold text-slate-400">
+                    Ready to start?
+                  </p>
+                  <button
+                    type="button"
+                    className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200 cursor-pointer relative z-10"
+                  >
+                    Get Premium Access
+                    <ArrowRightIcon />
+                  </button>
+                </div>
               </div>
             </div>
           </section>
