@@ -2,24 +2,24 @@
 
 import { useState } from "react";
 import {
-  BookmarkIcon,
-  CapIcon,
-  ChevronIcon,
-  CodeIcon,
-  HomeIcon,
-  LibraryIcon,
-  MonitorIcon,
-  TargetIcon,
-} from "./icons";
+  Bookmark,
+  ChevronDown,
+  Code2,
+  GraduationCap,
+  Home,
+  Library,
+  Monitor,
+  Target,
+} from "lucide-react";
 
 const primaryNav = [
-  { label: "Home", icon: <HomeIcon /> },
-  { label: "Library", chevron: true, icon: <LibraryIcon /> },
-  { label: "Saved", icon: <BookmarkIcon /> },
-  { label: "Monitoring", icon: <MonitorIcon /> },
-  { label: "Competitors", icon: <TargetIcon /> },
-  { label: "Training", icon: <CapIcon /> },
-  { label: "API", icon: <CodeIcon /> },
+  { label: "Home", icon: <Home className="h-4 w-4" /> },
+  { label: "Library", chevron: true, icon: <Library className="h-4 w-4" /> },
+  { label: "Saved", icon: <Bookmark className="h-4 w-4" /> },
+  { label: "Monitoring", icon: <Monitor className="h-4 w-4" /> },
+  { label: "Competitors", icon: <Target className="h-4 w-4" /> },
+  { label: "Training", icon: <GraduationCap className="h-4 w-4" /> },
+  { label: "API", icon: <Code2 className="h-4 w-4" /> },
 ];
 
 const libraryItems = [
@@ -74,7 +74,7 @@ export default function Sidebar() {
                     libraryOpen ? "rotate-0" : "-rotate-90"
                   }`}
                 >
-                  <ChevronIcon />
+                  <ChevronDown className="h-4 w-4" />
                 </span>
               ) : null}
             </button>

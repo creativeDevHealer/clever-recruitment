@@ -1,6 +1,6 @@
 ﻿import MainPanel from "./MainPanel";
 import Sidebar from "./Sidebar";
-import { ChatbotIcon } from "./icons";
+import { Bot } from "lucide-react";
 
 export default function DashboardFrame() {
   return (
@@ -12,7 +12,7 @@ export default function DashboardFrame() {
             aria-label="Open chatbot"
             className="absolute bottom-5 right-8 z-20 grid h-10 w-10 place-items-center rounded-full bg-[#0b0f1a] text-white shadow-[0_10px_20px_rgba(0,0,0,0.35)]"
           >
-            <ChatbotIcon />
+            <Bot className="h-5 w-5" />
           </button>
           <div className="flex h-full gap-4">
             <div className="hidden w-48 shrink-0 lg:block" />

@@ -2,18 +2,19 @@
 
 import { useEffect, useMemo, useState, type MouseEvent } from "react";
 import {
-  ArrowRightIcon,
-  ChatSquareIcon,
-  ChevronIcon,
-  FlameIcon,
-  GridIcon,
-  LockIcon,
-  LiveChatIcon,
-  MonitorIcon,
-  PlayIcon,
-  SparkleIcon,
-  TargetIcon,
-} from "./icons";
+  ArrowRight as ArrowRightIcon,
+  ChevronDown as ChevronIcon,
+  Clock,
+  Flame as FlameIcon,
+  LayoutGrid as GridIcon,
+  Lock as LockIcon,
+  MessageCircle as LiveChatIcon,
+  MessageSquare as ChatSquareIcon,
+  Monitor as MonitorIcon,
+  Play as PlayIcon,
+  Sparkles as SparkleIcon,
+  Target as TargetIcon,
+} from "lucide-react";
 
 const pickCards = [
   {
@@ -484,8 +485,8 @@ export default function MainPanel() {
             <section className="space-y-5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="grid h-9 w-9 place-items-center rounded-full bg-orange-100 text-orange-500">
-                    <SparkleIcon />
+                  <span className="grid h-9 w-9 place-items-center rounded-full text-orange-500">
+                    <SparkleIcon className="h-5 w-5" />
                   </span>
                   <h2 className="text-lg font-semibold">Editor&apos;s Picks</h2>
                 </div>
@@ -547,12 +548,12 @@ export default function MainPanel() {
                         </div>
                         <div className="mt-3 flex justify-center">
                           <div className="grid h-8 w-8 place-items-center rounded-full border border-slate-200 text-slate-300">
-                            <LockIcon />
+                            <LockIcon className="h-4 w-4" />
                           </div>
                         </div>
                       </div>
                       <div className="flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-400">
-                        <LockIcon />
+                        <LockIcon className="h-4 w-4" />
                         Upgrade to View
                       </div>
                     </div>
@@ -563,7 +564,7 @@ export default function MainPanel() {
                     Tomorrow
                   </p>
                   <div className="grid h-12 w-12 place-items-center rounded-full bg-slate-100">
-                    <div className="h-5 w-5 rounded-full border-2 border-slate-300" />
+                    <Clock className="h-5 w-5 text-slate-300" />
                   </div>
                   <div className="space-y-1">
                     <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
@@ -592,10 +593,10 @@ export default function MainPanel() {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="grid h-8 w-8 place-items-center rounded-lg border border-slate-200 text-slate-400">
-                    <LockIcon />
+                    <LockIcon className="h-4 w-4" />
                   </span>
                   <div className="flex items-center gap-1 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 h-8">
-                    <FlameIcon />
+                    <FlameIcon className="h-4 w-4" />
                     0d
                   </div>
                 </div>
@@ -642,9 +643,9 @@ export default function MainPanel() {
                           {item.highlight ? (
                             <span className="text-lg font-semibold">S</span>
                           ) : Icon ? (
-                            <Icon />
+                            <Icon className="h-4 w-4" />
                           ) : (
-                            <SparkleIcon />
+                            <SparkleIcon className="h-4 w-4" />
                           )}
                         </div>
                         <div>
@@ -670,7 +671,11 @@ export default function MainPanel() {
                         </div>
                       </div>
                       <div className="grid h-7 w-7 place-items-center rounded-full border border-slate-200 text-slate-400">
-                        {item.highlight ? <LockIcon /> : <ChevronIcon />}
+                        {item.highlight ? (
+                          <LockIcon className="h-4 w-4" />
+                        ) : (
+                          <ChevronIcon className="h-4 w-4" />
+                        )}
                       </div>
                     </div>
                   );
@@ -685,7 +690,7 @@ export default function MainPanel() {
                 <span
                   className={`transition ${showAll ? "rotate-180" : "rotate-0"}`}
                 >
-                  <ChevronIcon />
+                  <ChevronIcon className="h-4 w-4" />
                 </span>
               </button>
             </aside>
@@ -694,9 +699,9 @@ export default function MainPanel() {
           <section className="mt-10 space-y-5 pb-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2">
-                <span className="grid h-9 w-9 place-items-center rounded-full bg-blue-50 text-blue-500">
-                  <PlayIcon />
-                </span>
+                  <span className="grid h-9 w-9 place-items-center rounded-full text-blue-500">
+                    <PlayIcon className="h-5 w-5" />
+                  </span>
                 <h3 className="text-lg font-semibold text-slate-900">
                   Discover Clever
                 </h3>
@@ -705,7 +710,7 @@ export default function MainPanel() {
                 type="button"
                 className="flex items-center gap-2 text-xs font-semibold text-slate-400"
               >
-                View training <ArrowRightIcon />
+                View training <ArrowRightIcon className="h-4 w-4" />
               </button>
             </div>
             <div className="grid gap-6 rounded-2xl border border-slate-200 bg-white shadow-sm lg:grid-cols-[minmax(0,1fr)_30%]">
@@ -743,7 +748,7 @@ export default function MainPanel() {
                     className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200 cursor-pointer relative z-10"
                   >
                     Get Premium Access
-                    <ArrowRightIcon />
+                    <ArrowRightIcon className="h-4 w-4" />
                   </button>
                 </div>
               </div>
@@ -756,7 +761,7 @@ export default function MainPanel() {
                 type="button"
                 className="flex items-center gap-2 transition hover:text-slate-500"
               >
-                <ChatSquareIcon />
+                <ChatSquareIcon className="h-4 w-4" />
                 Share Feedback
               </button>
               <span className="hidden h-3 w-px bg-slate-200 sm:inline-block" />
@@ -764,7 +769,7 @@ export default function MainPanel() {
                 type="button"
                 className="flex items-center gap-2 transition hover:text-slate-500"
               >
-                <LiveChatIcon />
+                <LiveChatIcon className="h-4 w-4" />
                 Live Chat
               </button>
               <span className="hidden h-3 w-px bg-slate-200 sm:inline-block" />
@@ -772,7 +777,7 @@ export default function MainPanel() {
                 type="button"
                 className="flex items-center gap-2 transition hover:text-slate-500"
               >
-                <GridIcon />
+                <GridIcon className="h-4 w-4" />
                 All Training
               </button>
             </div>
