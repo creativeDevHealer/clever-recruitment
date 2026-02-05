@@ -200,7 +200,6 @@ function MiniChart({
   rangeStart,
   rangeEnd,
   peakLabel,
-  active,
 }: {
   revenue: number[];
   spend: number[];
@@ -208,7 +207,6 @@ function MiniChart({
   rangeStart: string;
   rangeEnd: string;
   peakLabel: string;
-  active?: boolean;
 }) {
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
 
@@ -245,6 +243,10 @@ function MiniChart({
       };
     }, [revenue, spend]);
 
+  const lastIndex = revenue.length - 1;
+  const lastX = xPositions[lastIndex] ?? 0;
+  const lastY = revenueYs[lastIndex] ?? 0;
+
   const tooltip =
     hoverIndex !== null
       ? {
@@ -265,22 +267,26 @@ function MiniChart({
     setHoverIndex(index);
   };
 
+  const formatRevenue = (value: number) => `$${value.toFixed(1)}K/mo`;
+  const formatSpend = (value: number) => `$${Math.round(value * 60)}/day`;
+
   return (
     <div className="rounded-xl bg-slate-50 p-3">
-      <div className="flex items-center justify-between text-[10px] text-slate-400">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-end gap-3 text-[11px] font-semibold text-slate-500">
+        <span className="flex items-center gap-1 text-blue-600">
           <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
-          <span>Monthly Rev</span>
-        </div>
-        <div className="flex items-center gap-2">
+          Monthly Rev
+        </span>
+        <span className="flex items-center gap-1 text-slate-500">
           <span className="h-1.5 w-1.5 rounded-full bg-slate-300" />
-          <span>Spend</span>
-        </div>
+          Spend
+        </span>
       </div>
-      <div className="relative mt-2">
+      <div className="relative mt-1">
         <svg
           viewBox="0 0 120 40"
           className="h-10 w-full"
+          preserveAspectRatio="none"
           onMouseMove={handleMove}
           onMouseLeave={() => setHoverIndex(null)}
         >
@@ -295,8 +301,8 @@ function MiniChart({
             x2="120"
             y1="6"
             y2="6"
-            stroke="#cbd5f5"
-            strokeDasharray="4 4"
+            stroke="#2563eb"
+            strokeDasharray="2 2"
             strokeWidth="1"
           />
           <path
@@ -316,7 +322,7 @@ function MiniChart({
           <polyline
             points={revenuePoints}
             fill="none"
-            stroke={active ? "#2563eb" : "#94a3b8"}
+            stroke="#2563eb"
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -325,17 +331,32 @@ function MiniChart({
             points={spendPoints}
             fill="none"
             stroke="#cbd5f5"
-            strokeDasharray="3 3"
             strokeWidth="1.4"
             strokeLinecap="round"
+            className="opacity-0 transition-opacity duration-200 group-hover:opacity-100"
           />
+          <circle
+            cx={lastX}
+            cy={lastY}
+            r="2.2"
+            fill="#2563eb"
+          />
+          <text
+            x={lastX-15}
+            y={13}
+            fontSize="6"
+            fill="#2563eb"
+            fontWeight="600"
+          >
+            {peakLabel}
+          </text>
           {tooltip ? (
             <>
               <circle
                 cx={tooltip.x}
                 cy={tooltip.revenueY}
                 r="2.5"
-                fill={active ? "#2563eb" : "#94a3b8"}
+                fill="#2563eb"
               />
               <circle
                 cx={tooltip.x}
@@ -346,13 +367,10 @@ function MiniChart({
             </>
           ) : null}
         </svg>
-        <div className="pointer-events-none absolute -top-1 right-0 text-[10px] font-semibold text-slate-400">
-          {peakLabel}
-        </div>
-        <div className="pointer-events-none absolute -bottom-3 left-0 text-[10px] text-slate-400">
+        <div className="pointer-events-none absolute -bottom-3 left-0 text-[10px] font-semibold text-slate-500">
           {rangeStart}
         </div>
-        <div className="pointer-events-none absolute -bottom-3 right-0 text-[10px] text-slate-400">
+        <div className="pointer-events-none absolute -bottom-3 right-0 text-[10px] font-semibold text-slate-500">
           {rangeEnd}
         </div>
         {tooltip ? (
@@ -373,7 +391,7 @@ function MiniChart({
                   Monthly Rev
                 </span>
                 <span className="font-semibold text-slate-700">
-                  ${tooltip.revenue.toFixed(1)}K/mo
+                  {formatRevenue(tooltip.revenue)}
                 </span>
               </div>
               <div className="flex items-center justify-between">
@@ -382,7 +400,7 @@ function MiniChart({
                   Ad Spend
                 </span>
                 <span className="font-semibold text-slate-700">
-                  ${tooltip.spend.toFixed(1)}K/day
+                  {formatSpend(tooltip.spend)}
                 </span>
               </div>
             </div>
@@ -500,7 +518,7 @@ export default function MainPanel() {
                   return (
                     <div
                       key={pick.id}
-                      className={`relative space-y-4 rounded-2xl border p-4 text-left shadow-sm transition ${
+                      className={`group relative space-y-4 rounded-2xl border p-4 text-left shadow-sm transition ${
                         isActive
                           ? "border-blue-200 bg-blue-50/40"
                           : "border-slate-200"
@@ -530,7 +548,6 @@ export default function MainPanel() {
                         rangeStart={pick.rangeStart}
                         rangeEnd={pick.rangeEnd}
                         peakLabel={pick.peakLabel}
-                        active={isActive}
                       />
                       <div className="flex items-center justify-between text-xs text-slate-400">
                         <span>{pick.ads}</span>
