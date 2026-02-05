@@ -1,28 +1,44 @@
-﻿import { ChevronIcon } from "./icons";
+﻿"use client";
+
+import { useState } from "react";
+import {
+  BookmarkIcon,
+  CapIcon,
+  ChevronIcon,
+  CodeIcon,
+  HomeIcon,
+  LibraryIcon,
+  MonitorIcon,
+  TargetIcon,
+} from "./icons";
 
 const primaryNav = [
-  { label: "Home", active: true },
-  { label: "Library", active: false, chevron: true },
-  { label: "Saved", active: false },
-  { label: "Monitoring", active: false },
-  { label: "Competitors", active: false },
-  { label: "Training", active: false },
-  { label: "API", active: false },
+  { label: "Home", icon: <HomeIcon /> },
+  { label: "Library", chevron: true, icon: <LibraryIcon /> },
+  { label: "Saved", icon: <BookmarkIcon /> },
+  { label: "Monitoring", icon: <MonitorIcon /> },
+  { label: "Competitors", icon: <TargetIcon /> },
+  { label: "Training", icon: <CapIcon /> },
+  { label: "API", icon: <CodeIcon /> },
 ];
 
 const libraryItems = [
-  "Web Apps",
-  "Micro SaaS",
-  "Mobile Apps",
-  "All Brands",
+  "SDRs",
+  "Account Execs",
+  "Sales Ops",
+  "All Roles",
 ];
 
 export default function Sidebar() {
+  const [activeItem, setActiveItem] = useState("Home");
+  const [activeLibrary, setActiveLibrary] = useState("SDRs");
+  const [libraryOpen, setLibraryOpen] = useState(true);
+
   return (
-    <aside className="hidden h-full w-48 flex-col justify-between p-1 text-slate-200 lg:fixed lg:inset-y-3 lg:left-3 lg:flex lg:overflow-hidden">
+    <aside className="hidden h-full w-48 flex-col justify-between rounded-[22px] p-2 text-slate-200 lg:fixed lg:inset-y-4 lg:left-4 lg:flex lg:overflow-hidden">
       <div className="space-y-6">
         <div className="flex items-center gap-3">
-          <div className="grid h-10 w-10 place-items-center rounded-lg bg-gradient-to-br from-sky-500 via-blue-600 to-indigo-700 text-white">
+          <div className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-sky-500 via-blue-600 to-indigo-700 text-white">
             <span className="text-lg font-semibold">C</span>
           </div>
           <div>
@@ -31,54 +47,79 @@ export default function Sidebar() {
           </div>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-3">
           {primaryNav.slice(0, 2).map((item) => (
             <button
               key={item.label}
               type="button"
-              className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-sm transition ${
-                item.active
+              onClick={() => {
+                setActiveItem(item.label);
+                if (item.chevron) {
+                  setLibraryOpen((prev) => !prev);
+                }
+              }}
+              className={`flex w-full items-center justify-between rounded-xl px-2 py-3 text-sm transition ${
+                activeItem === item.label
                   ? "bg-white/10 text-white"
                   : "text-slate-300 hover:bg-white/5"
               }`}
             >
-              <span>{item.label}</span>
+              <span className="flex items-center gap-2">
+                <span className="text-slate-400">{item.icon}</span>
+                <span>{item.label}</span>
+              </span>
               {item.chevron ? (
-                <span className="text-slate-500">
+                <span
+                  className={`text-slate-500 transition ${
+                    libraryOpen ? "rotate-0" : "-rotate-90"
+                  }`}
+                >
                   <ChevronIcon />
                 </span>
               ) : null}
             </button>
           ))}
 
-          <div className="space-y-2 pl-4 text-sm text-slate-400">
-            {libraryItems.map((label) => (
-              <div
-                key={label}
-                className="flex items-center justify-between rounded-lg px-2 py-2 text-slate-400 hover:bg-white/5"
-              >
+          {libraryOpen ? (
+            <div className="space-y-2 pl-3 text-sm text-slate-400">
+              {libraryItems.map((label) => (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() => setActiveLibrary(label)}
+                  className={`flex w-full items-center justify-between rounded-lg px-2 py-2 transition ${
+                    activeLibrary === label
+                      ? "bg-white/5 text-slate-100"
+                      : "text-slate-400 hover:bg-white/5"
+                  }`}
+                >
                 <span>{label}</span>
-                <span className="h-1.5 w-1.5 rounded-full bg-slate-500" />
-              </div>
-            ))}
-          </div>
+                </button>
+              ))}
+            </div>
+          ) : null}
 
-          <div className="space-y-2 pt-2">
             {primaryNav.slice(2).map((item) => (
               <button
                 key={item.label}
                 type="button"
-                className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-sm text-slate-300 hover:bg-white/5"
+                onClick={() => setActiveItem(item.label)}
+                className={`flex w-full items-center justify-between rounded-xl px-2 py-3 text-sm transition ${
+                  activeItem === item.label
+                    ? "bg-white/10 text-white"
+                    : "text-slate-300 hover:bg-white/5"
+                }`}
               >
-                <span>{item.label}</span>
-                <span className="h-1.5 w-1.5 rounded-full bg-slate-500" />
+                <span className="flex items-center gap-2">
+                  <span className="text-slate-400">{item.icon}</span>
+                  <span>{item.label}</span>
+                </span>
               </button>
             ))}
-          </div>
         </div>
       </div>
 
-      <div className="space-y-3 border-t border-white/5 pt-3 mb-9">
+      <div className="space-y-3 border-t border-white/5 pt-3 mb-8">
         <div className="flex items-center gap-3">
           <div className="h-9 w-9 rounded-full bg-gradient-to-br from-slate-500 via-slate-300 to-white" />
           <div>

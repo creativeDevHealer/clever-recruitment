@@ -1,32 +1,376 @@
-﻿import {
+﻿"use client";
+
+import { useEffect, useMemo, useState, type MouseEvent } from "react";
+import {
   ArrowRightIcon,
-  CheckIcon,
+  ChatSquareIcon,
+  ChevronIcon,
+  FlameIcon,
+  GridIcon,
   LockIcon,
+  LiveChatIcon,
+  MonitorIcon,
   PlayIcon,
-  PulseIcon,
   SparkleIcon,
+  TargetIcon,
 } from "./icons";
 
-const picks = [
-  { label: "Yesterday", tag: "Communication Chat", amount: "$50K" },
-  { label: "Today", tag: "AI Automation Workflow", amount: "$747K", active: true },
+const pickCards = [
+  {
+    id: "yesterday",
+    label: "Yesterday",
+    tag: "Outbound Outreach",
+    amount: "$50K",
+    ads: "108 leads",
+    categories: ["Outbound", "New"],
+    rangeStart: "Dec 26",
+    rangeEnd: "Feb 3",
+    peakLabel: "49.3K",
+    dates: [
+      "Jan 14",
+      "Jan 16",
+      "Jan 18",
+      "Jan 20",
+      "Jan 22",
+      "Jan 24",
+      "Jan 26",
+      "Jan 28",
+      "Jan 30",
+      "Feb 1",
+      "Feb 2",
+      "Feb 3",
+    ],
+    revenue: [12, 14, 13, 15, 16, 14, 18, 19, 17, 22, 26, 24],
+    spend: [9, 10, 11, 10, 11, 12, 12, 13, 12, 13, 14, 13],
+  },
+  {
+    id: "today",
+    label: "Today",
+    tag: "AI Screening Workflow",
+    amount: "$747K",
+    ads: "574 leads",
+    categories: ["Enterprise"],
+    rangeStart: "Dec 26",
+    rangeEnd: "Feb 3",
+    peakLabel: "1.4M",
+    dates: [
+      "Jan 14",
+      "Jan 16",
+      "Jan 18",
+      "Jan 20",
+      "Jan 22",
+      "Jan 24",
+      "Jan 26",
+      "Jan 28",
+      "Jan 30",
+      "Feb 1",
+      "Feb 2",
+      "Feb 3",
+    ],
+    revenue: [18, 20, 19, 22, 24, 23, 26, 28, 27, 30, 34, 36],
+    spend: [11, 12, 12, 13, 14, 15, 15, 16, 16, 17, 18, 18],
+  },
 ];
 
-const journey = [
-  { title: "Your $500 Stripe Credit", subtitle: "Included with membership" },
-  { title: "Why You Can See Everything", subtitle: "W1" },
-  { title: "The 90-Day Signal", subtitle: "W1" },
-  { title: "My 5-Minute Routine", subtitle: "W1" },
+const baseJourneyItems = [
+  {
+    id: "credit",
+    title: "Your $500 Stripe Credit",
+    subtitle: "Included with membership",
+    badge: "S",
+    icon: "credit",
+    highlight: true,
+    extra: false,
+  },
+  {
+    id: "visibility",
+    title: "Why You Can See Everything",
+    subtitle: "W1",
+    badge: "W1",
+    icon: "play",
+    highlight: false,
+    extra: false,
+  },
+  {
+    id: "signal",
+    title: "The 90-Day Signal",
+    subtitle: "W1",
+    badge: "W1",
+    icon: "target",
+    highlight: false,
+    extra: false,
+  },
+  {
+    id: "routine",
+    title: "My 5-Minute Routine",
+    subtitle: "W1",
+    badge: "W1",
+    icon: "monitor",
+    highlight: false,
+    extra: false,
+  },
 ];
+
+const extraJourneyItems = Array.from({ length: 9 }, (_, index) => ({
+  id: `extra-${index + 1}`,
+  title: `Hiring System Module ${index + 1}`,
+  subtitle: `W${Math.min(index + 2, 6)}`,
+  badge: `W${Math.min(index + 2, 6)}`,
+  icon: "target",
+  highlight: false,
+  extra: true,
+}));
+
+const journeyItems = [...baseJourneyItems, ...extraJourneyItems];
+
+function MiniChart({
+  revenue,
+  spend,
+  labels,
+  rangeStart,
+  rangeEnd,
+  peakLabel,
+  active,
+}: {
+  revenue: number[];
+  spend: number[];
+  labels: string[];
+  rangeStart: string;
+  rangeEnd: string;
+  peakLabel: string;
+  active?: boolean;
+}) {
+  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+
+  const { revenuePoints, spendPoints, xPositions, revenueYs, spendYs } =
+    useMemo(() => {
+      const combined = [...revenue, ...spend];
+      const min = Math.min(...combined);
+      const max = Math.max(...combined);
+      const step = 120 / (revenue.length - 1);
+      const xValues = revenue.map((_, index) => index * step);
+      const range = max - min || 1;
+      const mapY = (value: number) =>
+        40 - ((value - min) / range) * (40 - 6) - 3;
+      const revenuePointsValue = revenue
+        .map((value, index) => {
+          const x = xValues[index];
+          const y = mapY(value);
+          return `${x.toFixed(1)},${y.toFixed(1)}`;
+        })
+        .join(" ");
+      const spendPointsValue = spend
+        .map((value, index) => {
+          const x = xValues[index];
+          const y = mapY(value);
+          return `${x.toFixed(1)},${y.toFixed(1)}`;
+        })
+        .join(" ");
+      return {
+        revenuePoints: revenuePointsValue,
+        spendPoints: spendPointsValue,
+        xPositions: xValues,
+        revenueYs: revenue.map(mapY),
+        spendYs: spend.map(mapY),
+      };
+    }, [revenue, spend]);
+
+  const tooltip =
+    hoverIndex !== null
+      ? {
+          date: labels[hoverIndex] ?? "",
+          revenue: revenue[hoverIndex] ?? 0,
+          spend: spend[hoverIndex] ?? 0,
+          x: xPositions[hoverIndex] ?? 0,
+          revenueY: revenueYs[hoverIndex] ?? 0,
+          spendY: spendYs[hoverIndex] ?? 0,
+        }
+      : null;
+
+  const handleMove = (event: MouseEvent<SVGSVGElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const ratio = Math.min(Math.max(x / rect.width, 0), 1);
+    const index = Math.round(ratio * (revenue.length - 1));
+    setHoverIndex(index);
+  };
+
+  return (
+    <div className="rounded-xl bg-slate-50 p-3">
+      <div className="flex items-center justify-between text-[10px] text-slate-400">
+        <div className="flex items-center gap-2">
+          <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+          <span>Monthly Rev</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="h-1.5 w-1.5 rounded-full bg-slate-300" />
+          <span>Spend</span>
+        </div>
+      </div>
+      <div className="relative mt-2">
+        <svg
+          viewBox="0 0 120 40"
+          className="h-10 w-full"
+          onMouseMove={handleMove}
+          onMouseLeave={() => setHoverIndex(null)}
+        >
+          <defs>
+            <linearGradient id="revFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.25" />
+              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          <line
+            x1="0"
+            x2="120"
+            y1="6"
+            y2="6"
+            stroke="#cbd5f5"
+            strokeDasharray="4 4"
+            strokeWidth="1"
+          />
+          <path
+            d={`M${revenuePoints} L120 38 L0 38 Z`}
+            fill="url(#revFill)"
+          />
+          {tooltip ? (
+            <line
+              x1={tooltip.x}
+              x2={tooltip.x}
+              y1="0"
+              y2="40"
+              stroke="#e2e8f0"
+              strokeWidth="1"
+            />
+          ) : null}
+          <polyline
+            points={revenuePoints}
+            fill="none"
+            stroke={active ? "#2563eb" : "#94a3b8"}
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <polyline
+            points={spendPoints}
+            fill="none"
+            stroke="#cbd5f5"
+            strokeDasharray="3 3"
+            strokeWidth="1.4"
+            strokeLinecap="round"
+          />
+          {tooltip ? (
+            <>
+              <circle
+                cx={tooltip.x}
+                cy={tooltip.revenueY}
+                r="2.5"
+                fill={active ? "#2563eb" : "#94a3b8"}
+              />
+              <circle
+                cx={tooltip.x}
+                cy={tooltip.spendY}
+                r="2.5"
+                fill="#94a3b8"
+              />
+            </>
+          ) : null}
+        </svg>
+        <div className="pointer-events-none absolute -top-1 right-0 text-[10px] font-semibold text-slate-400">
+          {peakLabel}
+        </div>
+        <div className="pointer-events-none absolute -bottom-3 left-0 text-[10px] text-slate-400">
+          {rangeStart}
+        </div>
+        <div className="pointer-events-none absolute -bottom-3 right-0 text-[10px] text-slate-400">
+          {rangeEnd}
+        </div>
+        {tooltip ? (
+          <div
+            className="pointer-events-none absolute top-0 w-40 rounded-xl border border-slate-200 bg-white p-2 text-[11px] text-slate-500 shadow-lg"
+            style={{
+              left: `${Math.min(Math.max((tooltip.x / 120) * 100, 8), 92)}%`,
+              transform: "translate(-50%, -8px)",
+            }}
+          >
+            <p className="text-xs font-semibold text-slate-700">
+              {tooltip.date}
+            </p>
+            <div className="mt-2 space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                  Monthly Rev
+                </span>
+                <span className="font-semibold text-slate-700">
+                  ${tooltip.revenue.toFixed(1)}K/mo
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <span className="h-1.5 w-1.5 rounded-full bg-slate-300" />
+                  Ad Spend
+                </span>
+                <span className="font-semibold text-slate-700">
+                  ${tooltip.spend.toFixed(1)}K/day
+                </span>
+              </div>
+            </div>
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
 
 export default function MainPanel() {
+  const activePick = "today";
+  const [showAll, setShowAll] = useState(false);
+  const [dropCountdown, setDropCountdown] = useState({
+    hours: "00",
+    minutes: "00",
+    seconds: "00",
+  });
+
+  const extraCount = journeyItems.filter((item) => item.extra).length;
+  const totalTasks = 25;
+  const completedTasks = 0;
+  const journeyPercent = 0;
+
+  const visibleJourney = showAll
+    ? journeyItems
+    : journeyItems.filter((item) => !item.extra);
+
+  useEffect(() => {
+    const updateCountdown = () => {
+      const now = new Date();
+      const nextDrop = new Date(now);
+      nextDrop.setHours(8, 0, 0, 0);
+      if (now >= nextDrop) {
+        nextDrop.setDate(nextDrop.getDate() + 1);
+      }
+      const diffMs = Math.max(nextDrop.getTime() - now.getTime(), 0);
+      const totalSeconds = Math.floor(diffMs / 1000);
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+      const pad = (value: number) => value.toString().padStart(2, "0");
+      setDropCountdown({
+        hours: pad(hours),
+        minutes: pad(minutes),
+        seconds: pad(seconds),
+      });
+    };
+
+    updateCountdown();
+    const timer = window.setInterval(updateCountdown, 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
   return (
     <div className="relative flex h-full flex-1">
-      <div className="absolute bottom-4 right-6 z-10 grid h-10 w-10 place-items-center rounded-full bg-[#0b0f1a] text-white shadow-[0_10px_20px_rgba(0,0,0,0.35)]">
-        <PulseIcon />
-      </div>
-      <div className="relative h-full w-full rounded-[22px] bg-white shadow-[0_25px_60px_rgba(15,23,42,0.35)]">
-        <div className="h-full overflow-y-auto px-6 py-6 sm:px-8">
+      <div className="relative h-full w-full overflow-hidden rounded-[26px] bg-white shadow-[0_25px_60px_rgba(15,23,42,0.35)]">
+        <div className="h-full overflow-y-auto px-6 py-6 sm:px-8 sm:py-8">
           <header className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-4">
               <div className="grid h-14 w-14 place-items-center rounded-full bg-slate-200 text-xl font-semibold text-slate-600">
@@ -46,23 +390,9 @@ export default function MainPanel() {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                className="rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-500"
-              >
-                Upgrade
-              </button>
-              <button
-                type="button"
-                className="rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-500"
-              >
-                Today
-              </button>
-            </div>
           </header>
 
-          <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
+          <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_35%]">
             <section className="space-y-5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -76,38 +406,74 @@ export default function MainPanel() {
                 </span>
               </div>
               <div className="grid gap-5 lg:grid-cols-3">
-                {picks.map((pick) => (
-                  <div
-                    key={pick.label}
-                    className={`space-y-4 rounded-2xl border p-4 shadow-sm ${
-                      pick.active
-                        ? "border-blue-200 bg-blue-50/40"
-                        : "border-slate-200"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between text-xs text-slate-400">
-                      <span className="uppercase">{pick.label}</span>
-                      <span className="text-sm font-semibold text-blue-600">
-                        {pick.amount}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-xl bg-slate-100" />
-                      <div className="space-y-1">
-                        <div className="h-3 w-24 rounded-full bg-slate-200" />
-                        <div className="inline-flex rounded-full border border-blue-200 bg-white px-2 py-0.5 text-xs text-blue-500">
-                          {pick.tag}
+                {pickCards.map((pick) => {
+                  const isActive = activePick === pick.id;
+                  return (
+                    <div
+                      key={pick.id}
+                      className={`relative space-y-4 rounded-2xl border p-4 text-left shadow-sm transition ${
+                        isActive
+                          ? "border-blue-200 bg-blue-50/40"
+                          : "border-slate-200"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between text-xs text-slate-400">
+                        <span className="uppercase tracking-[0.12em]">
+                          {pick.label}
+                        </span>
+                        <span className="text-sm font-semibold text-blue-600">
+                          {pick.amount}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-xl bg-slate-100" />
+                        <div className="space-y-1">
+                          <div className="h-3 w-24 rounded-full bg-slate-200" />
+                          <div className="inline-flex rounded-full border border-blue-200 bg-white px-2 py-0.5 text-xs text-blue-500">
+                            {pick.tag}
+                          </div>
                         </div>
                       </div>
+                      <MiniChart
+                        revenue={pick.revenue}
+                        spend={pick.spend}
+                        labels={pick.dates}
+                        rangeStart={pick.rangeStart}
+                        rangeEnd={pick.rangeEnd}
+                        peakLabel={pick.peakLabel}
+                        active={isActive}
+                      />
+                      <div className="flex items-center justify-between text-xs text-slate-400">
+                        <span>{pick.ads}</span>
+                        <span className="text-slate-300">...</span>
+                      </div>
+                      <div
+                        className={`rounded-xl border px-3 py-2 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.6)] backdrop-blur-sm ${
+                          isActive
+                            ? "border-amber-200/70 bg-[linear-gradient(120deg,_rgba(255,233,202,0.6)_0%,_rgba(255,244,228,0.85)_70%)]"
+                            : "border-slate-200 bg-slate-50/60"
+                        }`}
+                      >
+                        <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+                          Why this pick
+                        </div>
+                        <div className="mt-3 flex justify-center">
+                          <div className="grid h-8 w-8 place-items-center rounded-full border border-slate-200 text-slate-300">
+                            <LockIcon />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-400">
+                        <LockIcon />
+                        Upgrade to View
+                      </div>
                     </div>
-                    <div className="h-20 rounded-xl bg-slate-100" />
-                    <div className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-400">
-                      Upgrade to View
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
                 <div className="flex flex-col items-center justify-center gap-5 rounded-2xl border border-dashed border-slate-200 p-4 text-center">
-                  <p className="text-xs font-semibold text-slate-400">Tomorrow</p>
+                  <p className="text-xs font-semibold text-slate-400">
+                    Tomorrow
+                  </p>
                   <div className="grid h-12 w-12 place-items-center rounded-full bg-slate-100">
                     <div className="h-5 w-5 rounded-full border-2 border-slate-300" />
                   </div>
@@ -116,13 +482,13 @@ export default function MainPanel() {
                       New pick drops in
                     </p>
                     <div className="flex items-center justify-center gap-2 text-lg font-semibold text-slate-700">
-                      <span>20</span>
+                      <span>{dropCountdown.hours}</span>
                       <span className="text-xs text-slate-400">:</span>
-                      <span>31</span>
+                      <span>{dropCountdown.minutes}</span>
                       <span className="text-xs text-slate-400">:</span>
-                      <span>08</span>
+                      <span>{dropCountdown.seconds}</span>
                     </div>
-                    <p className="text-xs text-slate-400">8am EST · daily</p>
+                    <p className="text-xs text-slate-400">8am EST - daily</p>
                   </div>
                 </div>
               </div>
@@ -137,59 +503,107 @@ export default function MainPanel() {
                   <p className="text-xs text-slate-400">Week 1 of 6</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="grid h-8 w-8 place-items-center rounded-full border border-slate-200 text-slate-400">
+                  <span className="grid h-8 w-8 place-items-center rounded-lg border border-slate-200 text-slate-400">
                     <LockIcon />
-                  </div>
-                  <div className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
+                  </span>
+                  <div className="flex items-center gap-1 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 h-8">
+                    <FlameIcon />
                     0d
                   </div>
                 </div>
               </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs text-slate-400">
-                  <span>0/25 tasks</span>
-                  <span>0%</span>
+                  <span>
+                    {completedTasks}/{totalTasks} tasks
+                  </span>
+                  <span>{journeyPercent}%</span>
                 </div>
                 <div className="h-2 w-full rounded-full bg-slate-100">
-                  <div className="h-full w-[6%] rounded-full bg-blue-500" />
+                  <div
+                    className="h-full rounded-full bg-blue-500"
+                    style={{ width: `${journeyPercent}%` }}
+                  />
                 </div>
               </div>
-              <div className="space-y-3">
-                {journey.map((item, index) => (
-                  <div
-                    key={item.title}
-                    className={`flex items-center justify-between rounded-2xl border bg-white px-4 py-3 shadow-sm ${
-                      index === 0 ? "border-purple-200/60" : "border-slate-200"
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="grid h-10 w-10 place-items-center rounded-xl bg-slate-100 text-indigo-500">
-                        {index === 0 ? "S" : "W1"}
+              <div className="space-y-3 scrollbar-thin max-h-[380px] overflow-y-auto pr-1">
+                {visibleJourney.map((item) => {
+                  const iconMap = {
+                    play: PlayIcon,
+                    target: TargetIcon,
+                    monitor: MonitorIcon,
+                  } as const;
+                  const Icon = iconMap[item.icon as keyof typeof iconMap];
+                  return (
+                    <div
+                      key={item.id}
+                      className={`flex w-full items-center justify-between rounded-2xl border px-4 py-3 shadow-sm ${
+                        item.highlight
+                          ? "border-indigo-200/60 bg-[linear-gradient(120deg,_rgba(226,232,255,0.7)_0%,_rgba(255,255,255,0.95)_70%)]"
+                          : "border-slate-200 bg-white"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`grid h-10 w-10 place-items-center rounded-xl ${
+                            item.highlight
+                              ? "bg-indigo-100 text-indigo-600"
+                              : "bg-slate-100 text-slate-500"
+                          }`}
+                        >
+                          {item.highlight ? (
+                            <span className="text-lg font-semibold">S</span>
+                          ) : Icon ? (
+                            <Icon />
+                          ) : (
+                            <SparkleIcon />
+                          )}
+                        </div>
+                        <div>
+                          {!item.highlight ? (
+                            <div className="flex items-center gap-3">
+                              <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-500">
+                                {item.badge}
+                              </span>
+                              <p className="text-sm font-semibold text-slate-800">
+                                {item.title}
+                              </p>
+                            </div>
+                          ) : (
+                            <p className="text-sm font-semibold text-slate-800">
+                              {item.title}
+                            </p>
+                          )}
+                          {item.highlight ? (
+                            <p className="text-xs text-slate-400">
+                              {item.subtitle}
+                            </p>
+                          ) : null}
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm font-semibold text-slate-800">
-                          {item.title}
-                        </p>
-                        <p className="text-xs text-slate-400">{item.subtitle}</p>
+                      <div className="grid h-7 w-7 place-items-center rounded-full border border-slate-200 text-slate-400">
+                        {item.highlight ? <LockIcon /> : <ChevronIcon />}
                       </div>
                     </div>
-                    <div className="grid h-6 w-6 place-items-center rounded-full border border-slate-200 text-emerald-500">
-                      <CheckIcon />
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
               <button
                 type="button"
-                className="flex w-full items-center justify-center gap-2 text-xs font-semibold text-slate-400"
+                onClick={() => setShowAll((prev) => !prev)}
+                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-50 px-4 py-2 text-xs font-semibold text-slate-500"
               >
-                Show All (9 more)
-                <ArrowRightIcon />
+                {showAll ? "Show Less" : `Show All (${extraCount} more)`}
+                <span
+                  className={`transition ${showAll ? "rotate-180" : "rotate-0"}`}
+                >
+                  <ChevronIcon />
+                </span>
               </button>
             </aside>
           </div>
 
-          <section className="mt-10 space-y-5">
+          <section className="mt-10 space-y-5 pb-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 <span className="grid h-9 w-9 place-items-center rounded-full bg-blue-50 text-blue-500">
@@ -206,19 +620,24 @@ export default function MainPanel() {
                 View training <ArrowRightIcon />
               </button>
             </div>
-            <div className="grid gap-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm lg:grid-cols-[minmax(0,1fr)_280px]">
-              <div className="relative min-h-[220px] overflow-hidden rounded-2xl bg-gradient-to-br from-slate-200 via-slate-100 to-slate-300">
-                <div className="absolute inset-0 bg-[linear-gradient(135deg,_rgba(15,23,42,0.12)_0%,_transparent_60%)]" />
-                <div className="absolute bottom-6 right-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-white/90 shadow-lg">
-                  <PlayIcon />
-                </div>
-                <div className="absolute top-6 left-6 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-slate-600">
-                  INTRO · 2-3 min
-                </div>
+            <div className="grid gap-6 rounded-2xl border border-slate-200 bg-white shadow-sm lg:grid-cols-[minmax(0,1fr)_30%]">
+              <div className="relative min-h-[400] overflow-hidden lg:rounded-l-2xl">
+                <video
+                  className="h-full w-full object-cover"
+                  controls
+                  playsInline
+                  preload="metadata"
+                >
+                  <source src="/media/clever-intro.mp4" type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
               </div>
-              <div className="space-y-3">
-                <div className="inline-flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-500">
-                  INTRO
+              <div className="space-y-3 mt-6">
+                <div className="justify-content">
+                  <div className="inline-flex items-center gap-2 rounded-sm bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-500">
+                    INTRO
+                  </div>
+                  <span className="ml-2 text-xs text-slate-500">2-3 min</span>
                 </div>
                 <h4 className="text-lg font-semibold text-slate-900">
                   The Clever Hiring System
@@ -230,6 +649,34 @@ export default function MainPanel() {
               </div>
             </div>
           </section>
+
+          <div className="border-t border-slate-100 pt-4 pb-6">
+            <div className="flex flex-wrap items-center justify-center gap-6 text-xs font-semibold text-slate-400">
+              <button
+                type="button"
+                className="flex items-center gap-2 transition hover:text-slate-500"
+              >
+                <ChatSquareIcon />
+                Share Feedback
+              </button>
+              <span className="hidden h-3 w-px bg-slate-200 sm:inline-block" />
+              <button
+                type="button"
+                className="flex items-center gap-2 transition hover:text-slate-500"
+              >
+                <LiveChatIcon />
+                Live Chat
+              </button>
+              <span className="hidden h-3 w-px bg-slate-200 sm:inline-block" />
+              <button
+                type="button"
+                className="flex items-center gap-2 transition hover:text-slate-500"
+              >
+                <GridIcon />
+                All Training
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
